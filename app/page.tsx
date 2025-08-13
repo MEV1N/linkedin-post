@@ -282,14 +282,15 @@ export default function ParticipationCardGenerator() {
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
-    canvas.width = 720
-    canvas.height = 1280
+    // Set 4:3 aspect ratio - using larger dimensions for better quality
+    canvas.width = 1200
+    canvas.height = 900
 
-    const gradient = ctx.createLinearGradient(0, 0, 720, 1280)
+    const gradient = ctx.createLinearGradient(0, 0, 1200, 900)
     gradient.addColorStop(0, "#FEF3C7")
     gradient.addColorStop(1, "#FCD34D")
     ctx.fillStyle = gradient
-    ctx.fillRect(0, 0, 720, 1280)
+    ctx.fillRect(0, 0, 1200, 900)
 
     drawStars(ctx)
     drawConfetti(ctx)
@@ -297,21 +298,22 @@ export default function ParticipationCardGenerator() {
     const img = new Image()
     img.crossOrigin = "anonymous"
     img.onload = () => {
-      const photoSize = 150
-      const photoX = 360 - photoSize / 2
-      const photoY = 120
+      // Increase photo size significantly
+      const photoSize = 250
+      const photoX = 600 - photoSize / 2  // Center horizontally
+      const photoY = 80  // Position from top
 
       ctx.save()
       ctx.beginPath()
-      ctx.arc(360, photoY + photoSize / 2, photoSize / 2, 0, Math.PI * 2)
+      ctx.arc(600, photoY + photoSize / 2, photoSize / 2, 0, Math.PI * 2)
       ctx.clip()
       ctx.drawImage(img, photoX, photoY, photoSize, photoSize)
       ctx.restore()
 
       ctx.strokeStyle = "#FFFFFF"
-      ctx.lineWidth = 4
+      ctx.lineWidth = 6
       ctx.beginPath()
-      ctx.arc(360, photoY + photoSize / 2, photoSize / 2, 0, Math.PI * 2)
+      ctx.arc(600, photoY + photoSize / 2, photoSize / 2, 0, Math.PI * 2)
       ctx.stroke()
 
       drawText(ctx, name)
@@ -325,14 +327,14 @@ export default function ParticipationCardGenerator() {
   const drawStars = (ctx: CanvasRenderingContext2D) => {
     ctx.fillStyle = "#F59E0B"
     const starPositions = [
-      { x: 80, y: 150 },
-      { x: 640, y: 180 },
-      { x: 100, y: 800 },
-      { x: 620, y: 850 },
-      { x: 50, y: 500 },
-      { x: 670, y: 550 },
-      { x: 120, y: 1100 },
-      { x: 600, y: 1150 },
+      { x: 120, y: 120 },
+      { x: 1080, y: 140 },
+      { x: 150, y: 400 },
+      { x: 1050, y: 420 },
+      { x: 80, y: 650 },
+      { x: 1120, y: 680 },
+      { x: 180, y: 800 },
+      { x: 1020, y: 820 },
     ]
 
     starPositions.forEach((pos) => {
@@ -366,10 +368,10 @@ export default function ParticipationCardGenerator() {
 
   const drawConfetti = (ctx: CanvasRenderingContext2D) => {
     const colors = ["#EF4444", "#3B82F6", "#10B981", "#F59E0B", "#8B5CF6"]
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 40; i++) {
       ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)]
-      const x = Math.random() * 720
-      const y = Math.random() * 1280
+      const x = Math.random() * 1200
+      const y = Math.random() * 900
       const size = Math.random() * 8 + 4
 
       ctx.save()
@@ -384,27 +386,27 @@ export default function ParticipationCardGenerator() {
     ctx.fillStyle = "#1F2937"
     ctx.textAlign = "center"
 
-    ctx.font = "bold 36px Arial"
+    ctx.font = "bold 48px Arial"
     const text1 = `Hello, I'm ${userName} 😉`
-    ctx.fillText(text1, 360, 380)
-
-    ctx.font = "bold 32px Arial"
-    const text2 = "and I just participated in"
-    ctx.fillText(text2, 360, 440)
+    ctx.fillText(text1, 600, 420)
 
     ctx.font = "bold 42px Arial"
+    const text2 = "and I just participated in"
+    ctx.fillText(text2, 600, 500)
+
+    ctx.font = "bold 56px Arial"
     ctx.fillStyle = "#DC2626"
     const text3 = "Zero to Maker"
-    ctx.fillText(text3, 360, 520)
+    ctx.fillText(text3, 600, 600)
 
-    ctx.font = "bold 36px Arial"
+    ctx.font = "bold 48px Arial"
     ctx.fillStyle = "#1F2937"
     const text4 = "by Tinkerhub MBCCET 🚀"
-    ctx.fillText(text4, 360, 580)
+    ctx.fillText(text4, 600, 680)
 
-    ctx.font = "bold 28px Arial"
+    ctx.font = "bold 36px Arial"
     ctx.fillStyle = "#6B7280"
-    ctx.fillText("Tinkerhub MBCCET", 360, 1150)
+    ctx.fillText("Tinkerhub MBCCET", 600, 820)
   }
 
   const downloadCard = () => {
