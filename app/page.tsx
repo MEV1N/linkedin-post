@@ -434,20 +434,20 @@ export default function ParticipationCardGenerator() {
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
-    // Set canvas to match frame.png dimensions
-    canvas.width = 1080
-    canvas.height = 1350
+    // Set canvas to match frame2.png dimensions (1:1 ratio - 1920x1920)
+    canvas.width = 1920
+    canvas.height = 1920
 
     const frameImg = new Image()
     frameImg.onload = () => {
       const img = new Image()
       img.onload = () => {
-        // White box specs
+        // White box specs - centered in 1920x1920 canvas
         const PHOTO_RECT = {
-          x: 238,
-          y: 329,
-          width: 610,
-          height: 612,
+          x: (1920 - 1000) / 2,  // Center horizontally
+          y: (1920 - 1000) / 2,  // Center vertically
+          width: 1000,
+          height: 1000,
           radius: 40,
         }
 
@@ -455,7 +455,7 @@ export default function ParticipationCardGenerator() {
         ctx.clearRect(0, 0, canvas.width, canvas.height)
 
         // 2. Draw frame first
-        ctx.drawImage(frameImg, 0, 0, 1080, 1350)
+        ctx.drawImage(frameImg, 0, 0, 1920, 1920)
 
         // 3. Clip to white area
         ctx.save()
@@ -486,7 +486,7 @@ export default function ParticipationCardGenerator() {
         // 5. Load and draw astro.png on top
         const astroImg = new Image()
         astroImg.onload = () => {
-          ctx.drawImage(astroImg, 0, 0, 1080, 1350)
+          ctx.drawImage(astroImg, 0, 0, 1920, 1920)
           
           const dataURL = canvas.toDataURL("image/png")
           setGeneratedCard(dataURL)
@@ -495,7 +495,7 @@ export default function ParticipationCardGenerator() {
       }
       img.src = croppedPhoto
     }
-    frameImg.src = "/frame2.png"
+    frameImg.src = "/frame3.png"
   }
 
   const roundedRectPath = (
