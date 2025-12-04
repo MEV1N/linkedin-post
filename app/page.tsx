@@ -444,10 +444,10 @@ export default function ParticipationCardGenerator() {
       img.onload = () => {
         // White box specs - centered in 1920x1920 canvas
         const PHOTO_RECT = {
-          x: (1920 - 1000) / 2,  // Center horizontally
-          y: (1920 - 1000) / 2,  // Center vertically
-          width: 1000,
-          height: 1000,
+          x: 1020 / 2,  // Center horizontally
+          y: 918 / 2,  // Center vertically
+          width: 880,
+          height: 880,
           radius: 40,
         }
 
