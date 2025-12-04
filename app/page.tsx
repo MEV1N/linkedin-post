@@ -495,7 +495,7 @@ export default function ParticipationCardGenerator() {
       }
       img.src = croppedPhoto
     }
-    frameImg.src = "/frame.png"
+    frameImg.src = "/frame2.png"
   }
 
   const roundedRectPath = (
