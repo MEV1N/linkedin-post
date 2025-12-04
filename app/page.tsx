@@ -21,11 +21,14 @@ export default function ParticipationCardGenerator() {
   const [cropSize, setCropSize] = useState(150)
   const [isDragging, setIsDragging] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
+  const [resizeHandle, setResizeHandle] = useState<string | null>(null)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
+  const [isDrawing, setIsDrawing] = useState(false)
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const cropCanvasRef = useRef<HTMLCanvasElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const animationFrameRef = useRef<number | null>(null)
   const { toast } = useToast()
 
   const linkedInPost =
@@ -69,12 +72,66 @@ export default function ParticipationCardGenerator() {
     const x = (clientX - rect.left) * (canvas.width / rect.width)
     const y = (clientY - rect.top) * (canvas.height / rect.height)
 
-    // Check if clicking on resize handle (bottom-right corner) - larger touch area
-    const handleSize = 25
-    const resizeHandleX = cropPosition.x + cropSize - handleSize/2
-    const resizeHandleY = cropPosition.y + cropSize - handleSize/2
-    if (x >= resizeHandleX && x <= resizeHandleX + handleSize && y >= resizeHandleY && y <= resizeHandleY + handleSize) {
+    const handleSize = 30 // Larger for mobile
+    const edgeThreshold = 15 // Distance from edge to trigger resize
+
+    // Check for corner handles (priority over edges)
+    // Top-left
+    if (x >= cropPosition.x - handleSize/2 && x <= cropPosition.x + handleSize/2 &&
+        y >= cropPosition.y - handleSize/2 && y <= cropPosition.y + handleSize/2) {
       setIsResizing(true)
+      setResizeHandle('top-left')
+      return
+    }
+    // Top-right
+    if (x >= cropPosition.x + cropSize - handleSize/2 && x <= cropPosition.x + cropSize + handleSize/2 &&
+        y >= cropPosition.y - handleSize/2 && y <= cropPosition.y + handleSize/2) {
+      setIsResizing(true)
+      setResizeHandle('top-right')
+      return
+    }
+    // Bottom-left
+    if (x >= cropPosition.x - handleSize/2 && x <= cropPosition.x + handleSize/2 &&
+        y >= cropPosition.y + cropSize - handleSize/2 && y <= cropPosition.y + cropSize + handleSize/2) {
+      setIsResizing(true)
+      setResizeHandle('bottom-left')
+      return
+    }
+    // Bottom-right
+    if (x >= cropPosition.x + cropSize - handleSize/2 && x <= cropPosition.x + cropSize + handleSize/2 &&
+        y >= cropPosition.y + cropSize - handleSize/2 && y <= cropPosition.y + cropSize + handleSize/2) {
+      setIsResizing(true)
+      setResizeHandle('bottom-right')
+      return
+    }
+
+    // Check for edge handles
+    // Top edge
+    if (x >= cropPosition.x + edgeThreshold && x <= cropPosition.x + cropSize - edgeThreshold &&
+        y >= cropPosition.y - handleSize/2 && y <= cropPosition.y + handleSize/2) {
+      setIsResizing(true)
+      setResizeHandle('top')
+      return
+    }
+    // Bottom edge
+    if (x >= cropPosition.x + edgeThreshold && x <= cropPosition.x + cropSize - edgeThreshold &&
+        y >= cropPosition.y + cropSize - handleSize/2 && y <= cropPosition.y + cropSize + handleSize/2) {
+      setIsResizing(true)
+      setResizeHandle('bottom')
+      return
+    }
+    // Left edge
+    if (x >= cropPosition.x - handleSize/2 && x <= cropPosition.x + handleSize/2 &&
+        y >= cropPosition.y + edgeThreshold && y <= cropPosition.y + cropSize - edgeThreshold) {
+      setIsResizing(true)
+      setResizeHandle('left')
+      return
+    }
+    // Right edge
+    if (x >= cropPosition.x + cropSize - handleSize/2 && x <= cropPosition.x + cropSize + handleSize/2 &&
+        y >= cropPosition.y + edgeThreshold && y <= cropPosition.y + cropSize - edgeThreshold) {
+      setIsResizing(true)
+      setResizeHandle('right')
       return
     }
 
@@ -104,27 +161,87 @@ export default function ParticipationCardGenerator() {
     const x = (clientX - rect.left) * (canvas.width / rect.width)
     const y = (clientY - rect.top) * (canvas.height / rect.height)
 
-    if (isResizing) {
-      const newSize = Math.max(
-        50,
-        Math.min(
-          Math.min(x - cropPosition.x, y - cropPosition.y),
-          Math.min(canvas.width - cropPosition.x, canvas.height - cropPosition.y),
-        ),
-      )
-      setCropSize(newSize)
-    } else if (isDragging) {
-      const newX = Math.max(0, Math.min(x - dragOffset.x, canvas.width - cropSize))
-      const newY = Math.max(0, Math.min(y - dragOffset.y, canvas.height - cropSize))
-      setCropPosition({ x: newX, y: newY })
+    // Cancel any pending animation frame
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current)
     }
 
-    drawCropPreview()
+    // Use requestAnimationFrame for smooth updates
+    animationFrameRef.current = requestAnimationFrame(() => {
+      if (isResizing && resizeHandle) {
+        let newX = cropPosition.x
+        let newY = cropPosition.y
+        let newSize = cropSize
+
+        const minSize = 50
+
+        switch (resizeHandle) {
+          case 'top-left':
+            newX = Math.min(x, cropPosition.x + cropSize - minSize)
+            newY = Math.min(y, cropPosition.y + cropSize - minSize)
+            newSize = Math.max(minSize, cropPosition.x + cropSize - newX, cropPosition.y + cropSize - newY)
+            newSize = Math.min(newSize, cropPosition.x + cropSize, cropPosition.y + cropSize)
+            newX = cropPosition.x + cropSize - newSize
+            newY = cropPosition.y + cropSize - newSize
+            break
+          case 'top-right':
+            newY = Math.min(y, cropPosition.y + cropSize - minSize)
+            newSize = Math.max(minSize, x - cropPosition.x, cropPosition.y + cropSize - newY)
+            newSize = Math.min(newSize, canvas.width - cropPosition.x, cropPosition.y + cropSize)
+            newY = cropPosition.y + cropSize - newSize
+            break
+          case 'bottom-left':
+            newX = Math.min(x, cropPosition.x + cropSize - minSize)
+            newSize = Math.max(minSize, cropPosition.x + cropSize - newX, y - cropPosition.y)
+            newSize = Math.min(newSize, cropPosition.x + cropSize, canvas.height - cropPosition.y)
+            newX = cropPosition.x + cropSize - newSize
+            break
+          case 'bottom-right':
+            newSize = Math.max(minSize, Math.min(x - cropPosition.x, y - cropPosition.y))
+            newSize = Math.min(newSize, canvas.width - cropPosition.x, canvas.height - cropPosition.y)
+            break
+          case 'top':
+            newY = Math.min(y, cropPosition.y + cropSize - minSize)
+            newSize = Math.max(minSize, cropPosition.y + cropSize - newY)
+            newSize = Math.min(newSize, cropPosition.y + cropSize)
+            newY = cropPosition.y + cropSize - newSize
+            break
+          case 'bottom':
+            newSize = Math.max(minSize, y - cropPosition.y)
+            newSize = Math.min(newSize, canvas.height - cropPosition.y)
+            break
+          case 'left':
+            newX = Math.min(x, cropPosition.x + cropSize - minSize)
+            newSize = Math.max(minSize, cropPosition.x + cropSize - newX)
+            newSize = Math.min(newSize, cropPosition.x + cropSize)
+            newX = cropPosition.x + cropSize - newSize
+            break
+          case 'right':
+            newSize = Math.max(minSize, x - cropPosition.x)
+            newSize = Math.min(newSize, canvas.width - cropPosition.x)
+            break
+        }
+
+        setCropPosition({ x: newX, y: newY })
+        setCropSize(newSize)
+      } else if (isDragging) {
+        const newX = Math.max(0, Math.min(x - dragOffset.x, canvas.width - cropSize))
+        const newY = Math.max(0, Math.min(y - dragOffset.y, canvas.height - cropSize))
+        setCropPosition({ x: newX, y: newY })
+      }
+    })
   }
 
   const handleCropEnd = () => {
     setIsDragging(false)
     setIsResizing(false)
+    setResizeHandle(null)
+    
+    // Cancel any pending animation frame
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current)
+      animationFrameRef.current = null
+    }
   }
 
   const drawCropPreview = useCallback(() => {
@@ -187,12 +304,41 @@ export default function ParticipationCardGenerator() {
       ctx.stroke()
       ctx.setLineDash([])
 
-      // Draw resize handle (larger for mobile)
-      const handleSize = 20
-      ctx.fillStyle = "#3B82F6"
-      ctx.fillRect(cropPosition.x + cropSize - handleSize/2, cropPosition.y + cropSize - handleSize/2, handleSize, handleSize)
-      ctx.fillStyle = "#FFFFFF"
-      ctx.fillRect(cropPosition.x + cropSize - handleSize/2 + 2, cropPosition.y + cropSize - handleSize/2 + 2, handleSize - 4, handleSize - 4)
+      // Draw resize handles (corners and edges) - optimized for mobile
+      const handleSize = 24
+      const handleColor = "#3B82F6"
+      const handleBorder = "#FFFFFF"
+      
+      // Corner handles
+      const corners = [
+        { x: cropPosition.x, y: cropPosition.y }, // top-left
+        { x: cropPosition.x + cropSize, y: cropPosition.y }, // top-right
+        { x: cropPosition.x, y: cropPosition.y + cropSize }, // bottom-left
+        { x: cropPosition.x + cropSize, y: cropPosition.y + cropSize }, // bottom-right
+      ]
+      
+      corners.forEach(corner => {
+        ctx.fillStyle = handleColor
+        ctx.fillRect(corner.x - handleSize/2, corner.y - handleSize/2, handleSize, handleSize)
+        ctx.fillStyle = handleBorder
+        ctx.fillRect(corner.x - handleSize/2 + 3, corner.y - handleSize/2 + 3, handleSize - 6, handleSize - 6)
+      })
+
+      // Edge handles (middle of each side)
+      const edgeHandleSize = 20
+      const edges = [
+        { x: cropPosition.x + cropSize / 2, y: cropPosition.y }, // top
+        { x: cropPosition.x + cropSize / 2, y: cropPosition.y + cropSize }, // bottom
+        { x: cropPosition.x, y: cropPosition.y + cropSize / 2 }, // left
+        { x: cropPosition.x + cropSize, y: cropPosition.y + cropSize / 2 }, // right
+      ]
+      
+      edges.forEach(edge => {
+        ctx.fillStyle = handleColor
+        ctx.fillRect(edge.x - edgeHandleSize/2, edge.y - edgeHandleSize/2, edgeHandleSize, edgeHandleSize)
+        ctx.fillStyle = handleBorder
+        ctx.fillRect(edge.x - edgeHandleSize/2 + 2, edge.y - edgeHandleSize/2 + 2, edgeHandleSize - 4, edgeHandleSize - 4)
+      })
     }
     img.src = photoPreview
   }, [photoPreview, cropPosition, cropSize])
@@ -206,6 +352,13 @@ export default function ParticipationCardGenerator() {
       }, 100)
     }
   }, [showCropper, photoPreview, drawCropPreview])
+
+  // Redraw on position/size changes with debouncing
+  useEffect(() => {
+    if (showCropper && photoPreview && (isDragging || isResizing)) {
+      drawCropPreview()
+    }
+  }, [cropPosition, cropSize, showCropper, photoPreview, isDragging, isResizing, drawCropPreview])
 
   const applyCrop = () => {
     const canvas = cropCanvasRef.current
@@ -539,7 +692,10 @@ export default function ParticipationCardGenerator() {
                     Reset
                   </Button>
                 </div>
-                <p className="text-sm text-gray-600">Drag the grid square to move • Drag the corner handle to resize</p>
+                <p className="text-sm text-gray-600">
+                  <span className="block sm:inline">Drag inside to move • </span>
+                  <span className="block sm:inline">Drag corners/edges to resize</span>
+                </p>
                 <div className="flex justify-center overflow-hidden">
                   <canvas
                     ref={cropCanvasRef}
