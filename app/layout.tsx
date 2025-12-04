@@ -6,8 +6,8 @@ import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: "Zero to Maker - Participation Card Generator",
-  description: "Generate your personalized participation card for Tinkerhub MBCCET Zero to Maker event",
+  title: "Baselion Profile Picture Generator",
+  description: "Generate your personalized profile picture for Baselion rocket launching event",
   generator: "v0.app",
 }
 

@@ -11,7 +11,6 @@ import { Upload, Download, Copy, Check, Move, RotateCcw } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 export default function ParticipationCardGenerator() {
-  const [name, setName] = useState("")
   const [photo, setPhoto] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [croppedPhoto, setCroppedPhoto] = useState<string | null>(null)
@@ -276,52 +275,95 @@ export default function ParticipationCardGenerator() {
   }
 
   const generateCard = async () => {
-    if (!name || !croppedPhoto || !canvasRef.current) return
+    if (!croppedPhoto || !canvasRef.current) return
 
     const canvas = canvasRef.current
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
-    // Set 4:3 aspect ratio - using larger dimensions for better quality
-    canvas.width = 1200
-    canvas.height = 900
+    // Set canvas to match frame.png dimensions
+    canvas.width = 1080
+    canvas.height = 1350
 
-    const gradient = ctx.createLinearGradient(0, 0, 1200, 900)
-    gradient.addColorStop(0, "#FEF3C7")
-    gradient.addColorStop(1, "#FCD34D")
-    ctx.fillStyle = gradient
-    ctx.fillRect(0, 0, 1200, 900)
+    const frameImg = new Image()
+    frameImg.onload = () => {
+      const img = new Image()
+      img.onload = () => {
+        // White box specs
+        const PHOTO_RECT = {
+          x: 238,
+          y: 329,
+          width: 610,
+          height: 612,
+          radius: 40,
+        }
 
-    drawStars(ctx)
-    drawConfetti(ctx)
+        // 1. Clear
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    const img = new Image()
-    img.crossOrigin = "anonymous"
-    img.onload = () => {
-      // Increase photo size significantly
-      const photoSize = 250
-      const photoX = 600 - photoSize / 2  // Center horizontally
-      const photoY = 80  // Position from top
+        // 2. Draw frame first
+        ctx.drawImage(frameImg, 0, 0, 1080, 1350)
 
-      ctx.save()
-      ctx.beginPath()
-      ctx.arc(600, photoY + photoSize / 2, photoSize / 2, 0, Math.PI * 2)
-      ctx.clip()
-      ctx.drawImage(img, photoX, photoY, photoSize, photoSize)
-      ctx.restore()
+        // 3. Clip to white area
+        ctx.save()
+        roundedRectPath(
+          ctx,
+          PHOTO_RECT.x,
+          PHOTO_RECT.y,
+          PHOTO_RECT.width,
+          PHOTO_RECT.height,
+          PHOTO_RECT.radius
+        )
+        ctx.clip()
 
-      ctx.strokeStyle = "#FFFFFF"
-      ctx.lineWidth = 6
-      ctx.beginPath()
-      ctx.arc(600, photoY + photoSize / 2, photoSize / 2, 0, Math.PI * 2)
-      ctx.stroke()
+        // 4. Draw user image with "cover" fit
+        const iw = img.width
+        const ih = img.height
+        const scale = Math.max(PHOTO_RECT.width / iw, PHOTO_RECT.height / ih)
+        const newW = iw * scale
+        const newH = ih * scale
 
-      drawText(ctx, name)
+        const dx = PHOTO_RECT.x + (PHOTO_RECT.width - newW) / 2
+        const dy = PHOTO_RECT.y + (PHOTO_RECT.height - newH) / 2
 
-      const dataURL = canvas.toDataURL("image/png")
-      setGeneratedCard(dataURL)
+        ctx.drawImage(img, dx, dy, newW, newH)
+
+        ctx.restore()
+
+        // 5. Load and draw astro.png on top
+        const astroImg = new Image()
+        astroImg.onload = () => {
+          ctx.drawImage(astroImg, 0, 0, 1080, 1350)
+          
+          const dataURL = canvas.toDataURL("image/png")
+          setGeneratedCard(dataURL)
+        }
+        astroImg.src = "/astro.png"
+      }
+      img.src = croppedPhoto
     }
-    img.src = croppedPhoto
+    frameImg.src = "/frame.png"
+  }
+
+  const roundedRectPath = (
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    r: number
+  ) => {
+    ctx.beginPath()
+    ctx.moveTo(x + r, y)
+    ctx.lineTo(x + w - r, y)
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r)
+    ctx.lineTo(x + w, y + h - r)
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
+    ctx.lineTo(x + r, y + h)
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r)
+    ctx.lineTo(x, y + r)
+    ctx.quadraticCurveTo(x, y, x + r, y)
+    ctx.closePath()
   }
 
   const drawStars = (ctx: CanvasRenderingContext2D) => {
@@ -413,7 +455,7 @@ export default function ParticipationCardGenerator() {
     if (!generatedCard) return
 
     const link = document.createElement("a")
-    link.download = `${name}-participation-card.png`
+    link.download = `participation-card.png`
     link.href = generatedCard
     link.click()
 
@@ -441,7 +483,7 @@ export default function ParticipationCardGenerator() {
     }
   }
 
-  const canGenerate = name.trim() && croppedPhoto
+  const canGenerate = croppedPhoto
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-100 p-4">
@@ -461,17 +503,6 @@ export default function ParticipationCardGenerator() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                placeholder="Enter your full name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="text-lg"
-              />
-            </div>
-
             <div className="space-y-2">
               <Label>Profile Photo</Label>
               <div className="flex items-center gap-4">
@@ -579,41 +610,6 @@ export default function ParticipationCardGenerator() {
               >
                 <Download className="w-4 h-4" />
                 Download Image
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {generatedCard && (
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <span className="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
-                  3
-                </span>
-                Share on LinkedIn
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded-lg border">
-                <p className="text-gray-800 leading-relaxed">{linkedInPost}</p>
-              </div>
-              <Button
-                onClick={copyToClipboard}
-                variant="outline"
-                className="w-full flex items-center justify-center gap-2 bg-transparent"
-              >
-                {copied ? (
-                  <>
-                    <Check className="w-4 h-4 text-green-600" />
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4" />
-                    Copy Post Text
-                  </>
-                )}
               </Button>
             </CardContent>
           </Card>
