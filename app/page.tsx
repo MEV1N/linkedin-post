@@ -486,17 +486,17 @@ export default function ParticipationCardGenerator() {
   const canGenerate = croppedPhoto
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-100 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 p-4">
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="text-center py-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Zero to Maker Participation Card</h1>
-          <p className="text-lg text-gray-600">Generate your personalized participation card for Tinkerhub MBCCET</p>
+          <h1 className="text-4xl font-bold text-white mb-2">Basilian-01 Profile Generator</h1>
+          <p className="text-lg text-slate-200">Generate your personalized profile picture for Baselion rocket launching event</p>
         </div>
 
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <span className="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+              <span className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
                 1
               </span>
               Enter Your Details
@@ -579,7 +579,7 @@ export default function ParticipationCardGenerator() {
             <Button
               onClick={generateCard}
               disabled={!canGenerate}
-              className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3"
             >
               Generate Participation Card
             </Button>
@@ -590,7 +590,7 @@ export default function ParticipationCardGenerator() {
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <span className="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+                <span className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
                   2
                 </span>
                 Your Participation Card
@@ -606,7 +606,7 @@ export default function ParticipationCardGenerator() {
               </div>
               <Button
                 onClick={downloadCard}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 flex items-center justify-center gap-2"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 flex items-center justify-center gap-2"
               >
                 <Download className="w-4 h-4" />
                 Download Image
