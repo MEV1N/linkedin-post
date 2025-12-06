@@ -643,7 +643,7 @@ export default function ParticipationCardGenerator() {
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="text-center py-8">
           <h1 className="text-4xl font-bold text-white mb-2">Basilian-01 Profile Generator</h1>
-          <p className="text-lg text-slate-200">Generate your personalized profile picture for Baselion rocket launching event</p>
+          <p className="text-lg text-slate-200">Generate your personalized profile picture for Basilian rocket launching event</p>
         </div>
 
         <Card className="shadow-lg">
